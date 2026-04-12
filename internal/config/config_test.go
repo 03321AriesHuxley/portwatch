@@ -61,6 +61,9 @@ alert_hook:
 	if cfg.AlertHook.URL != "http://example.com/hook" {
 		t.Errorf("unexpected hook URL: %s", cfg.AlertHook.URL)
 	}
+	if cfg.AlertHook.Timeout != 3*time.Second {
+		t.Errorf("expected hook timeout 3s, got %s", cfg.AlertHook.Timeout)
+	}
 	// ProcNet should retain defaults when not specified
 	if cfg.ProcNet.TCP != "/proc/net/tcp" {
 		t.Errorf("default TCP path overwritten: %s", cfg.ProcNet.TCP)
