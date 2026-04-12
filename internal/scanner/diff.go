@@ -2,28 +2,27 @@ package scanner
 
 import "fmt"
 
-// ChangeKind describes whether a port was added or removed.
-type ChangeKind string
+// ChangeType indicates whether a port was added or removed.
+type ChangeType string
 
 const (
-	Added   ChangeKind = "added"
-	Removed ChangeKind = "removed"
+	Added   ChangeType = "added"
+	Removed ChangeType = "removed"
 )
 
-// Change represents a single port binding change between two snapshots.
+// Change represents a single port binding change.
 type Change struct {
-	Kind  ChangeKind
-	Entry PortEntry
+	Type  ChangeType
+	Entry Entry
 }
 
 func (c Change) String() string {
-	return fmt.Sprintf("[%s] %s port %d (addr %s)",
-		c.Kind, c.Entry.Protocol, c.Entry.Port, c.Entry.LocalAddr)
+	return fmt.Sprintf("%s: %s", c.Type, c.Entry)
 }
 
-// Diff compares two snapshots and returns the list of changes.
-// prev is the previous snapshot; curr is the current one.
-func Diff(prev, curr []PortEntry) []Change {
+// Diff computes the difference between two snapshots, returning a list
+// of changes (added or removed port entries).
+func Diff(prev, curr []Entry) []Change {
 	prevSet := toSet(prev)
 	currSet := toSet(curr)
 
@@ -31,22 +30,25 @@ func Diff(prev, curr []PortEntry) []Change {
 
 	for key, entry := range currSet {
 		if _, exists := prevSet[key]; !exists {
-			changes = append(changes, Change{Kind: Added, Entry: entry})
+			changes = append(changes, Change{Type: Added, Entry: entry})
 		}
 	}
+
 	for key, entry := range prevSet {
 		if _, exists := currSet[key]; !exists {
-			changes = append(changes, Change{Kind: Removed, Entry: entry})
+			changes = append(changes, Change{Type: Removed, Entry: entry})
 		}
 	}
+
 	return changes
 }
 
-func toSet(entries []PortEntry) map[string]PortEntry {
-	m := make(map[string]PortEntry, len(entries))
+// toSet converts a slice of Entry into a map keyed by a unique string
+// representation for fast lookup.
+func toSet(entries []Entry) map[string]Entry {
+	m := make(map[string]Entry, len(entries))
 	for _, e := range entries {
-		key := fmt.Sprintf("%s|%s|%d", e.Protocol, e.LocalAddr, e.Port)
-		m[key] = e
+		m[e.String()] = e
 	}
 	return m
 }
