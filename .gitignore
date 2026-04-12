@@ -1,0 +1,13 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+*.test
+*.prof
+*.swo
+vendor/
+*.out
+*.swp
+.env
