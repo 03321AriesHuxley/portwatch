@@ -30,6 +30,18 @@ func (t *Ticker) Stop() {
 	t.ticker.Stop()
 }
 
+// Reset adjusts the ticker to fire at the new interval,
+// replacing the previous interval. The tick channel is not closed.
+func (t *Ticker) Reset(interval time.Duration) {
+	t.ticker.Reset(interval)
+	t.interval = interval
+}
+
+// Interval returns the current tick interval.
+func (t *Ticker) Interval() time.Duration {
+	return t.interval
+}
+
 // RunEvery calls fn on every tick until ctx is cancelled.
 // It returns ctx.Err() when the context is done.
 func RunEvery(ctx context.Context, interval time.Duration, fn func()) error {
