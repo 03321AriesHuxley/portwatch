@@ -29,3 +29,10 @@ func (e Entry) Equal(other Entry) bool {
 func (e Entry) Key() string {
 	return e.String()
 }
+
+// IsListening reports whether the entry is in the LISTEN state.
+// This is a convenience helper for filtering active listeners from a
+// full snapshot that may include entries in other TCP states.
+func (e Entry) IsListening() bool {
+	return e.State == "LISTEN"
+}
