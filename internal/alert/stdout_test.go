@@ -80,3 +80,23 @@ func TestStdoutNotifier_MultipleEvents(t *testing.T) {
 		t.Errorf("expected 3 lines, got %d: %q", len(lines), buf.String())
 	}
 }
+
+// TestStdoutNotifier_IncludesProtocolAndAddress verifies that the notifier
+// includes the protocol and local address in its output for each event.
+func TestStdoutNotifier_IncludesProtocolAndAddress(t *testing.T) {
+	var buf bytes.Buffer
+	n := alert.NewStdoutNotifier(alert.WithWriter(&buf))
+	events := []alert.Event{
+		{Kind: alert.EventAdded, Entry: makeStdoutEntry("udp", "192.168.1.1", 9090)},
+	}
+	if err := n.Send(context.Background(), events); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "udp") {
+		t.Errorf("expected protocol 'udp' in output, got: %q", out)
+	}
+	if !strings.Contains(out, "192.168.1.1") {
+		t.Errorf("expected address '192.168.1.1' in output, got: %q", out)
+	}
+}
