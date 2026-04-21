@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+// makeQuotaEvents is a test helper that creates a slice of n placeholder Events.
+func makeQuotaEvents(n int) []Event {
+	events := make([]Event, n)
+	for i := range events {
+		events[i] = Event{Port: i + 1}
+	}
+	return events
+}
+
 // TestPipeline_WithQuota ensures the PipelineBuilder can incorporate a
 // QuotaNotifier stage and that the quota is enforced end-to-end.
 func TestPipeline_WithQuota(t *testing.T) {
