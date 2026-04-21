@@ -52,6 +52,14 @@ func (e *emailNotifier) Send(ctx context.Context, events []Event) error {
 		return nil
 	}
 
+	if len(e.cfg.To) == 0 {
+		return fmt.Errorf("email notifier: no recipients configured")
+	}
+
+	if e.cfg.From == "" {
+		return fmt.Errorf("email notifier: no sender address configured")
+	}
+
 	subject := fmt.Sprintf("portwatch: %d port change(s) detected", len(events))
 	body := FormatEvents(events)
 
@@ -66,5 +74,8 @@ func (e *emailNotifier) Send(ctx context.Context, events []Event) error {
 	}, "\r\n"))
 
 	addr := fmt.Sprintf("%s:%d", e.cfg.Host, e.cfg.Port)
-	return e.send(addr, e.auth, e.cfg.From, e.cfg.To, msg)
+	if err := e.send(addr, e.auth, e.cfg.From, e.cfg.To, msg); err != nil {
+		return fmt.Errorf("email notifier: failed to send mail to %s: %w", addr, err)
+	}
+	return nil
 }
