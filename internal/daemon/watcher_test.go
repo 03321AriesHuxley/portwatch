@@ -79,6 +79,45 @@ func TestWatcher_DetectsAddedPort(t *testing.T) {
 	}
 }
 
+func TestWatcher_DetectsRemovedPort(t *testing.T) {
+	dir := t.TempDir()
+	initialContent := procHeader + "   0: 0100007F:1F90 00000000:0000 0A 00000000:00000000 00:00000000 00000000     0        0 0\n"
+	path := writeProcNetWatcher(t, dir, initialContent)
+
+	hookCalled := make(chan struct{}, 1)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hookCalled <- struct{}{}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	hook, err := alert.NewHook(ts.URL, 2*time.Second)
+	if err != nil {
+		t.Fatalf("NewHook: %v", err)
+	}
+
+	logger := alert.NewLogger(nil)
+	watcher := NewWatcher(20*time.Millisecond, path, logger, hook)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go watcher.Run(ctx) //nolint:errcheck
+
+	time.Sleep(30 * time.Millisecond)
+	// Remove the port by writing only the header
+	if err := os.WriteFile(path, []byte(procHeader), 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	select {
+	case <-hookCalled:
+		// success
+	case <-time.After(300 * time.Millisecond):
+		t.Fatal("hook was not called after port removal")
+	}
+}
+
 func TestWatcher_MissingProcFile(t *testing.T) {
 	logger := alert.NewLogger(nil)
 	watcher := NewWatcher(20*time.Millisecond, "/nonexistent/tcp", logger, nil)
