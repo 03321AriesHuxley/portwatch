@@ -14,8 +14,8 @@ type CooldownNotifier struct {
 	cooldown  time.Duration
 	threshold int
 
-	mu          sync.Mutex
-	events      []time.Time
+	mu           sync.Mutex
+	events       []time.Time
 	coolingUntil time.Time
 }
 
@@ -63,4 +63,13 @@ func (c *CooldownNotifier) Send(ctx context.Context, events []Event) error {
 	c.mu.Unlock()
 
 	return c.inner.Send(ctx, events)
+}
+
+// CoolingUntil returns the time at which the current cooldown period ends.
+// If the notifier is not currently in a cooldown, the returned time will be
+// in the past (or the zero value).
+func (c *CooldownNotifier) CoolingUntil() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.coolingUntil
 }
