@@ -45,6 +45,28 @@ func TestParseProcNet_ValidData(t *testing.T) {
 	}
 }
 
+func TestParseProcNet_HeaderOnly(t *testing.T) {
+	// A file with only the header line should produce zero entries.
+	content := "  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n"
+	tmp, err := os.CreateTemp("", "procnet-header-*.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString(content); err != nil {
+		t.Fatal(err)
+	}
+	tmp.Close()
+
+	entries, err := parseProcNet(tmp.Name(), "tcp")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected 0 entries for header-only file, got %d", len(entries))
+	}
+}
+
 func TestSnapshotReturnsNoError(t *testing.T) {
 	// Snapshot reads /proc — on Linux this should succeed; elsewhere it returns empty.
 	_, err := Snapshot()
