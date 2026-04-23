@@ -51,6 +51,11 @@ func (p *Pipeline) Stages() []PipelineStage {
 	return out
 }
 
+// Len returns the number of stages in the pipeline.
+func (p *Pipeline) Len() int {
+	return len(p.stages)
+}
+
 // String returns a human-readable description of the pipeline stages.
 func (p *Pipeline) String() string {
 	names := make([]string, len(p.stages))
